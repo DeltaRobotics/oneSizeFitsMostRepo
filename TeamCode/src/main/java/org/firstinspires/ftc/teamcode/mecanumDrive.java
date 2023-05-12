@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp(name="mecanumDrive")
 //@Disabled
@@ -15,10 +16,6 @@ public class mecanumDrive extends LinearOpMode{
     public DcMotor motorLF = null;
     public DcMotor motorRB = null;
     public DcMotor motorLB = null;
-
-    double speed = 1;
-    double zScale = 1;
-
 
     public void runOpMode() throws InterruptedException {
 
@@ -38,14 +35,17 @@ public class mecanumDrive extends LinearOpMode{
         motorLB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motorRF.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        motorLF.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorLB.setDirection(DcMotorSimple.Direction.REVERSE);
+
         waitForStart();
 
         while (opModeIsActive()) {
 
-            motorRF.setPower(speed*((-gamepad1.right_stick_y - gamepad1.right_stick_x) - (zScale * -gamepad1.left_stick_x)));
-            motorRB.setPower(speed*(-(-gamepad1.right_stick_x + gamepad1.right_stick_y) - (zScale * -gamepad1.left_stick_x)));
-            motorLB.setPower(speed*((gamepad1.right_stick_y + gamepad1.right_stick_x) - (zScale * -gamepad1.left_stick_x)));
-            motorLF.setPower(speed*((-gamepad1.right_stick_x + gamepad1.right_stick_y)) - (zScale * -gamepad1.left_stick_x));
+            motorRF.setPower((((-gamepad1.right_stick_y - gamepad1.right_stick_x) * 1) - (gamepad1.left_stick_x * 1)));
+            motorRB.setPower((((-gamepad1.right_stick_y + gamepad1.right_stick_x) * 1) - (gamepad1.left_stick_x * 1)));
+            motorLB.setPower((((-gamepad1.right_stick_y - gamepad1.right_stick_x) * 1) + (gamepad1.left_stick_x * 1)));
+            motorLF.setPower((((-gamepad1.right_stick_y + gamepad1.right_stick_x) * 1) + (gamepad1.left_stick_x * 1)));
 
             telemetry.addData("motorRFPower", motorRF.getPower());
             telemetry.addData("motorRBPower", motorRB.getPower());
