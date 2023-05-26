@@ -14,11 +14,13 @@ public class mecanumDriveWithHWMap extends LinearOpMode{
 
         robotHardware robot = new robotHardware(hardwareMap);
 
+        robot.resetDriveEncoders();
+
         waitForStart();
 
         while (opModeIsActive()) {
 
-            robot.mecanumDrive(gamepad1.right_stick_x, gamepad1.right_stick_y, gamepad1.left_stick_x);
+            robot.mecanumDrive(-gamepad1.right_stick_y, gamepad1.right_stick_x, gamepad1.left_stick_x, 1);
 
             telemetry.addData("motorRFPower", robot.motorRF.getPower());
             telemetry.addData("motorRBPower", robot.motorRB.getPower());
