@@ -35,7 +35,15 @@ public class robotHardware extends LinearOpMode
     public DcMotor rightEncoder = null;
     public DcMotor perpendicularEncoder = null;
 
-    HardwareMap hwMap = null;
+    DcMotor[] odometers = new DcMotor[3];
+    DcMotor[] drive = new DcMotor[4];
+    VoltageSensor ControlHub_VoltageSensor = null;
+
+    double moveSpeed = .5;
+    double turnSpeed = .5;
+
+    double moveAccuracy  = 1;
+    double angleAccuracy = Math.toRadians(1);
 
     public robotHardware(HardwareMap ahwMap)
     {
@@ -68,6 +76,17 @@ public class robotHardware extends LinearOpMode
         leftEncoder = motorLF;
         rightEncoder = motorRB;
         perpendicularEncoder = motorLB;
+
+        odometers[0] = leftEncoder;
+        odometers[1] = rightEncoder;
+        odometers[2] = perpendicularEncoder;
+
+        drive[0] = motorRF;
+        drive[1] = motorRB;
+        drive[2] = motorLB;
+        drive[3] = motorLF;
+
+        ControlHub_VoltageSensor = ahwMap.get(VoltageSensor.class, "Control Hub");
     }
 
     public void mecanumDrive(double forward, double strafe, double heading, double speed){
@@ -276,6 +295,18 @@ public class robotHardware extends LinearOpMode
         }
     }
 
+    //modifier for the speed attributes of the robot when moving in auto
+    public void changeSpeed(double mSpeed, double tSpeed){
+        moveSpeed = mSpeed;
+        turnSpeed = tSpeed;
+    }
+
+    //modifier for accuracy variables for the robot in auto
+    public void changeAccuracy(double mAccuracy, double aAccuracy){
+        moveAccuracy = mAccuracy;
+        angleAccuracy = aAccuracy;
+    }
+
     /**
      * this method is the key to using odometry
      * by imputing a location to drive to the robot will calculate an efficient path to the target.
@@ -295,7 +326,7 @@ public class robotHardware extends LinearOpMode
      *
      * this version will loop until the desired location is reached and then move on
      */
-    public void goToPos(DcMotor[] odometers, DcMotor[] drive, VoltageSensor ControlHub_VoltageSensor, double x, double y, double finalAngle, double moveSpeed, double turnSpeed, double moveAccuracy, double angleAccuracy, double followAngle)
+    public void goToPos(double x, double y, double finalAngle, double followAngle)
     {
         //bring in the encoder and motor objects
         //odometryRobotHardware robot = new odometryRobotHardware(hardwareMap);
@@ -320,7 +351,7 @@ public class robotHardware extends LinearOpMode
 
             //calculate the vector powers for the mecanum math
             double movementXpower = (reletiveXToTarget / (Math.abs(reletiveXToTarget) + Math.abs(reletiveYToTarget))) * slowDown;
-            double movementYpower = (reletiveYToTarget / (Math.abs(reletiveYToTarget) + Math.abs(reletiveXToTarget))) * slowDown * 1.2;
+            double movementYpower = (reletiveYToTarget / (Math.abs(reletiveYToTarget) + Math.abs(reletiveXToTarget))) * slowDown;
 
             //when far away from the target the robot will point at the target to get there faster.
             //at the end of the movement the robot will begin moving toward the desired final angle
@@ -380,65 +411,13 @@ public class robotHardware extends LinearOpMode
      *
      * this version will run one calaculation and needs to be used in a loop in the parent autonomus
      */
+    /*
     public void goToPosSingle(DcMotor[] odometers, DcMotor[] drive, VoltageSensor ControlHub_VoltageSensor, double x, double y, double finalAngle, double moveSpeed, double turnSpeed, double followAngle)
     {
-        //bring in the encoder and motor objects
-        //odometryRobotHardware robot = new odometryRobotHardware(hardwareMap);
 
-        //update odometry location
-        refresh(odometers);
-
-        double voltComp = (14.0/ControlHub_VoltageSensor.getVoltage()) * (11.0/14.0);
-
-        //math to calculate distances to the target
-        double distanceToTarget = Math.hypot(x - GlobalX, y - GlobalY);
-        double absoluteAngleToTarget = Math.atan2(x - GlobalX, y - GlobalY);
-        double reletiveAngleToTarget = angleWrapRad(absoluteAngleToTarget - GlobalHeading-Math.toRadians(90));
-        double reletiveXToTarget = -Math.cos(reletiveAngleToTarget) * distanceToTarget;
-        double reletiveYToTarget = -Math.sin(reletiveAngleToTarget) * distanceToTarget;
-
-        //slow down ensures the robot does not over shoot the target
-        double slowDown = Range.clip(Math.log(distanceToTarget +1) / 4, .125, moveSpeed);
-
-        //calculate the vector powers for the mecanum math
-        double movementXpower = (reletiveXToTarget / (Math.abs(reletiveXToTarget) + Math.abs(reletiveYToTarget))) * slowDown;
-        double movementYpower = (reletiveYToTarget / (Math.abs(reletiveYToTarget) + Math.abs(reletiveXToTarget))) * slowDown * 1.2;
-
-        //when far away from the target the robot will point at the target to get there faster.
-        //at the end of the movement the robot will begin moving toward the desired final angle
-        double movementTurnPower;
-        double reletiveTurnAngle;
-        if (distanceToTarget > 6) {
-            reletiveTurnAngle = angleWrapRad(reletiveAngleToTarget + followAngle);
-            movementTurnPower = Range.clip(reletiveTurnAngle / Math.toRadians(30), -turnSpeed, turnSpeed);
-            if (movementTurnPower >= 0 && movementTurnPower < .2)
-            {
-                movementTurnPower = .2;
-            }
-            else if (movementTurnPower <= 0 && movementTurnPower > -.2)
-            {
-                movementTurnPower = -.2;
-            }
-        } else {
-            reletiveTurnAngle = angleWrapRad(finalAngle - GlobalHeading);
-            movementTurnPower = Range.clip(reletiveTurnAngle / Math.toRadians(30), -turnSpeed, turnSpeed);
-            if (movementTurnPower >= 0 && movementTurnPower < .2)
-            {
-                movementTurnPower = .2;
-            }
-            else if (movementTurnPower <= 0 && movementTurnPower > -.2)
-            {
-                movementTurnPower = -.2;
-            }
-        }
-
-        //set the motors to the correct powers to move toward the target
-        drive[0].setPower(((movementXpower - movementYpower) + (movementTurnPower) * voltComp));
-        drive[1].setPower(((movementXpower + movementYpower) + (movementTurnPower) * voltComp));
-        drive[2].setPower(((movementXpower - movementYpower) - (movementTurnPower) * voltComp));
-        drive[3].setPower(((movementXpower + movementYpower) - (movementTurnPower) * voltComp));
 
     }
+    */
 
     public void runOpMode(){}
 }
