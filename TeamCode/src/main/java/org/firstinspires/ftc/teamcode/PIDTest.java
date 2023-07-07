@@ -1,12 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp(name="PIDTest")
+//explain config; nakes static variables in the opmode editable from dashboard
+@Config
 
 public class PIDTest extends LinearOpMode {
     public DcMotor motor = null;
@@ -15,7 +18,8 @@ public class PIDTest extends LinearOpMode {
     int speed = 0;
     double oldTime = 0.0;
     double currentTime = 0.0;
-    public double power = 1;
+    //made power editable in dashboard
+    public static double power = 1;
 
     public void runOpMode() throws InterruptedException{
         motor = hardwareMap.dcMotor.get("SlideLeft2");
