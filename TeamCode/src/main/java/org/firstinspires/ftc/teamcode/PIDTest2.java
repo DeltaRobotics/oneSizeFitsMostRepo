@@ -33,7 +33,7 @@ public class PIDTest2 extends LinearOpMode
     public static double I = 0.01;// = 0.1 * P           (fine ajustment of P)
     public static double D = 0.0001; // = 0                     (raise to reduce ocolation)
 
-    double wheelSpeed = 1200;
+    public static double wheelSpeed = 600;
     double speed = 0;
     double speed2 = 0;
     double speed3 = 0;

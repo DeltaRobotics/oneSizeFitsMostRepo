@@ -45,6 +45,57 @@ public class robotHardware extends LinearOpMode
     double moveAccuracy  = 1;
     double angleAccuracy = Math.toRadians(1);
 
+    //PID Drive Variables
+
+    public static double DriveF = 0.75; // = 32767 / maxV      (do not edit from this number)
+    public static double DriveP = 0.01; // = 0.1 * F           (raise till real's apex touches Var apex)
+    public static double DriveI = 0.01;// = 0.1 * P           (fine ajustment of P)
+    public static double DriveD = 0.0001; // = 0                     (raise to reduce ocolation)
+
+    double DrivePIDCurrentTime = 0;
+    double DrivePIDTime = 0;
+    double DrivePIDLastTime = 0;
+    double DrivePIDError = 0;
+    double DrivePIDPreviousError = 0;
+    double DrivePIDTotalError = 0;
+    double DrivePIDMinIntegral = -1.0;
+    double DrivePIDMaxIntegral = 1.0;
+    double DrivePIDMotorPower = 0;
+
+    //PID Turning Variables
+
+    public static double TurnF = 0.75; // = 32767 / maxV      (do not edit from this number)
+    public static double TurnP = 0.01; // = 0.1 * F           (raise till real's apex touches Var apex)
+    public static double TurnI = 0.01;// = 0.1 * P           (fine ajustment of P)
+    public static double TurnD = 0.0001; // = 0                     (raise to reduce ocolation)
+
+    double TurningPIDCurrentTime = 0;
+    double TurningPIDTime = 0;
+    double TurningPIDLastTime = 0;
+    double TurningPIDError = 0;
+    double TurningPIDPreviousError = 0;
+    double TurningPIDTotalError = 0;
+    double TurningPIDMinIntegral = -1.0;
+    double TurningPIDMaxIntegral = 1.0;
+    double TurningPIDMotorPower = 0;
+
+    //PID general Variables
+
+    public static double GeneralF = 0.75; // = 32767 / maxV      (do not edit from this number)
+    public static double GeneralP = 0.01; // = 0.1 * F           (raise till real's apex touches Var apex)
+    public static double GeneralI = 0.01;// = 0.1 * P           (fine ajustment of P)
+    public static double GeneralD = 0.0001; // = 0                     (raise to reduce ocolation)
+
+    double GeneralPIDCurrentTime = 0;
+    double GeneralPIDTime = 0;
+    double GeneralPIDLastTime = 0;
+    double GeneralPIDError = 0;
+    double GeneralPIDPreviousError = 0;
+    double GeneralPIDTotalError = 0;
+    double GeneralPIDMinIntegral = -1.0;
+    double GeneralPIDMaxIntegral = 1.0;
+    double GeneralPIDMotorPower = 0;
+
     public robotHardware(HardwareMap ahwMap)
     {
         //dive motors
@@ -418,6 +469,45 @@ public class robotHardware extends LinearOpMode
 
     }
     */
+
+    public double odoDrivePID(double target, double current){
+        DrivePIDPreviousError = DrivePIDError;
+        DrivePIDError = target - current;
+        DrivePIDLastTime = DrivePIDCurrentTime;
+        DrivePIDCurrentTime = (double) System.nanoTime()/1E9;
+        time = DrivePIDCurrentTime - DrivePIDLastTime;
+        DrivePIDTotalError += time * DrivePIDError;
+        DrivePIDTotalError = DrivePIDTotalError < DrivePIDMinIntegral ? DrivePIDMinIntegral: Math.min(DrivePIDMaxIntegral, DrivePIDTotalError);
+
+        DrivePIDMotorPower = (DriveP * DrivePIDError) + (DriveI * DrivePIDTotalError) + (DriveD * (DrivePIDError - DrivePIDPreviousError) / time) + DriveF;
+        return DrivePIDMotorPower;
+    }
+
+    public double odoTurnPID(double target, double current){
+        TurningPIDPreviousError = TurningPIDError;
+        TurningPIDError = target - current;
+        TurningPIDLastTime = TurningPIDCurrentTime;
+        TurningPIDCurrentTime = (double) System.nanoTime()/1E9;
+        time = TurningPIDCurrentTime - TurningPIDLastTime;
+        TurningPIDTotalError += time * TurningPIDError;
+        TurningPIDTotalError = TurningPIDTotalError < TurningPIDMinIntegral ? TurningPIDMinIntegral: Math.min(TurningPIDMaxIntegral, TurningPIDTotalError);
+
+        TurningPIDMotorPower = (TurnP * TurningPIDError) + (TurnI * TurningPIDTotalError) + (TurnD * (TurningPIDError - TurningPIDPreviousError) / time) + TurnF;
+        return TurningPIDMotorPower;
+    }
+
+    public double odoPID(double target, double current){
+        GeneralPIDPreviousError = GeneralPIDError;
+        GeneralPIDError = target - current;
+        GeneralPIDLastTime = GeneralPIDCurrentTime;
+        GeneralPIDCurrentTime = (double) System.nanoTime()/1E9;
+        time = GeneralPIDCurrentTime - GeneralPIDLastTime;
+        GeneralPIDTotalError += time * GeneralPIDError;
+        GeneralPIDTotalError = GeneralPIDTotalError < GeneralPIDMinIntegral ? GeneralPIDMinIntegral: Math.min(GeneralPIDMaxIntegral, GeneralPIDTotalError);
+
+        GeneralPIDMotorPower = (GeneralP * GeneralPIDError) + (GeneralI * GeneralPIDTotalError) + (GeneralD * (GeneralPIDError - GeneralPIDPreviousError) / time) + GeneralF;
+        return GeneralPIDMotorPower;
+    }
 
     public void runOpMode(){}
 }
