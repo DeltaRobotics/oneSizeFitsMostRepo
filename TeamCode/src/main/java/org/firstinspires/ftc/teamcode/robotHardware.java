@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -21,9 +23,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 /**
  * Created by User on 10/1/2022.
  */
-
+@Config
 public class robotHardware extends LinearOpMode
 {
+    FtcDashboard dashboard = FtcDashboard.getInstance();
     //drive motors
     public DcMotor motorRF = null;
     public DcMotor motorLF = null;
@@ -39,18 +42,18 @@ public class robotHardware extends LinearOpMode
     DcMotor[] drive = new DcMotor[4];
     VoltageSensor ControlHub_VoltageSensor = null;
 
-    double moveSpeed = .5;
-    double turnSpeed = .5;
+    double moveSpeed = 1;
+    double turnSpeed = 1;
 
     double moveAccuracy  = 1;
     double angleAccuracy = Math.toRadians(1);
 
     //PID Drive Variables
 
-    public static double DriveF = 0.75; // = 32767 / maxV      (do not edit from this number)
-    public static double DriveP = 0.01; // = 0.1 * F           (raise till real's apex touches Var apex)
-    public static double DriveI = 0.01;// = 0.1 * P           (fine ajustment of P)
-    public static double DriveD = 0.0001; // = 0                     (raise to reduce ocolation)
+    public static double DriveF = .175; // = 32767 / maxV      (do not edit from this number)
+    public static double DriveP = -0.06; // = 0.1 * F           (raise till real's apex touches Var apex)
+    public static double DriveI = 0;// = 0.1 * P           (fine ajustment of P)
+    public static double DriveD = -0.005; // = 0                     (raise to reduce ocolation)
 
     double DrivePIDCurrentTime = 0;
     double DrivePIDTime = 0;
@@ -64,10 +67,10 @@ public class robotHardware extends LinearOpMode
 
     //PID Turning Variables
 
-    public static double TurnF = 0.75; // = 32767 / maxV      (do not edit from this number)
-    public static double TurnP = 0.01; // = 0.1 * F           (raise till real's apex touches Var apex)
-    public static double TurnI = 0.01;// = 0.1 * P           (fine ajustment of P)
-    public static double TurnD = 0.0001; // = 0                     (raise to reduce ocolation)
+    public static double TurnF = 0; // = 32767 / maxV      (do not edit from this number)
+    public static double TurnP = 0; // = 0.1 * F           (raise till real's apex touches Var apex)
+    public static double TurnI = 0;// = 0.1 * P           (fine ajustment of P)
+    public static double TurnD = 0; // = 0                     (raise to reduce ocolation)
 
     double TurningPIDCurrentTime = 0;
     double TurningPIDTime = 0;
@@ -262,7 +265,7 @@ public class robotHardware extends LinearOpMode
     double inPerTick = 2.0 * Math.PI * R / N;
 
     //changes starting location (in inches)
-    public double GlobalX = 0;
+    public double GlobalX = 3;
     public double GlobalY = 0;
     public double GlobalHeading = 0;
 
@@ -313,7 +316,6 @@ public class robotHardware extends LinearOpMode
         GlobalHeading += dtheta;
         GlobalX += dx * Math.cos(GlobalHeading) - dy * Math.sin(GlobalHeading);
         GlobalY -= dx * Math.sin(GlobalHeading) + dy * Math.cos(GlobalHeading);
-        //todo fix here if wrong
 
 
         //makes heading 180 to -180
@@ -398,7 +400,7 @@ public class robotHardware extends LinearOpMode
             double reletiveYToTarget = Math.sin(reletiveAngleToTarget) * distanceToTarget;
 
             //slow down ensures the robot does not over shoot the target
-            double slowDown = Range.clip(Math.log(distanceToTarget +1) / 4, .125, moveSpeed);
+            double slowDown = Range.clip(odoDrivePID(0,distanceToTarget), 0, moveSpeed);
 
             //calculate the vector powers for the mecanum math
             double movementXpower = (reletiveXToTarget / (Math.abs(reletiveXToTarget) + Math.abs(reletiveYToTarget))) * slowDown;
@@ -410,26 +412,10 @@ public class robotHardware extends LinearOpMode
             double reletiveTurnAngle;
             if (distanceToTarget > 6) {
                 reletiveTurnAngle = angleWrapRad(reletiveAngleToTarget + followAngle);
-                movementTurnPower = Range.clip(reletiveTurnAngle / Math.toRadians(30), -turnSpeed, turnSpeed);
-                if (movementTurnPower >= 0 && movementTurnPower < .2)
-                {
-                    movementTurnPower = .2;
-                }
-                else if (movementTurnPower <= 0 && movementTurnPower > -.2)
-                {
-                    movementTurnPower = -.2;
-                }
+                movementTurnPower = Range.clip(odoTurnPID(0, reletiveTurnAngle), -turnSpeed, turnSpeed);
             } else {
                 reletiveTurnAngle = angleWrapRad(finalAngle - GlobalHeading);
-                movementTurnPower = Range.clip(reletiveTurnAngle / Math.toRadians(30), -turnSpeed, turnSpeed);
-                if (movementTurnPower >= 0 && movementTurnPower < .2)
-                {
-                    movementTurnPower = .2;
-                }
-                else if (movementTurnPower <= 0 && movementTurnPower > -.2)
-                {
-                    movementTurnPower = -.2;
-                }
+                movementTurnPower = Range.clip(odoTurnPID(0, reletiveTurnAngle), -turnSpeed, turnSpeed);
             }
 
             //set the motors to the correct powers to move toward the target
@@ -443,6 +429,50 @@ public class robotHardware extends LinearOpMode
         drive[3].setPower(0);
 
     }
+
+    public void goToPosSingle(double x, double y, double finalAngle, double followAngle)
+    {
+        //bring in the encoder and motor objects
+        //odometryRobotHardware robot = new odometryRobotHardware(hardwareMap);
+
+        //while loop makes the code keep running till the desired location is reached. (within the accuracy constraints)
+
+
+            //update odometry location
+            refresh(odometers);
+
+            double voltComp = (14.0/ControlHub_VoltageSensor.getVoltage()) * (11.0/14.0);
+
+            //math to calculate distances to the target
+            double distanceToTarget = Math.hypot(x - GlobalX, y - GlobalY);
+            double absoluteAngleToTarget = Math.atan2(x - GlobalX, y - GlobalY);
+            double reletiveAngleToTarget = angleWrapRad(absoluteAngleToTarget - GlobalHeading-Math.toRadians(90));
+            double reletiveXToTarget = Math.cos(reletiveAngleToTarget) * distanceToTarget;
+            double reletiveYToTarget = Math.sin(reletiveAngleToTarget) * distanceToTarget;
+
+            //slow down ensures the robot does not over shoot the target
+            double slowDown = Range.clip(odoDrivePID(0,distanceToTarget), 0, moveSpeed);
+
+            //calculate the vector powers for the mecanum math
+            double movementXpower = (reletiveXToTarget / (Math.abs(reletiveXToTarget) + Math.abs(reletiveYToTarget))) * slowDown;
+            double movementYpower = (reletiveYToTarget / (Math.abs(reletiveYToTarget) + Math.abs(reletiveXToTarget))) * slowDown;
+
+            //when far away from the target the robot will point at the target to get there faster.
+            //at the end of the movement the robot will begin moving toward the desired final angle
+            double movementTurnPower;
+            double reletiveTurnAngle;
+            if (distanceToTarget > 6) {
+                reletiveTurnAngle = angleWrapRad(reletiveAngleToTarget + followAngle);
+                movementTurnPower = Range.clip(odoTurnPID(0, reletiveTurnAngle), -turnSpeed, turnSpeed);
+            } else {
+                reletiveTurnAngle = angleWrapRad(finalAngle - GlobalHeading);
+                movementTurnPower = Range.clip(odoTurnPID(0, reletiveTurnAngle), -turnSpeed, turnSpeed);
+            }
+
+            //set the motors to the correct powers to move toward the target
+            mecanumDrive(movementXpower, movementYpower, movementTurnPower, voltComp);
+
+        }
 
     /**
      * this method is the key to using odometry
