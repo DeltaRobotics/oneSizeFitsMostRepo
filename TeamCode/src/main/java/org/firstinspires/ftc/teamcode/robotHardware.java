@@ -67,8 +67,8 @@ public class robotHardware extends LinearOpMode
 
     //PID Turning Variables
 
-    public static double TurnF = 0; // = 32767 / maxV      (do not edit from this number)
-    public static double TurnP = 0; // = 0.1 * F           (raise till real's apex touches Var apex)
+    public static double TurnF = -.1; // = 32767 / maxV      (do not edit from this number)
+    public static double TurnP = -.8; // = 0.1 * F           (raise till real's apex touches Var apex)
     public static double TurnI = 0;// = 0.1 * P           (fine ajustment of P)
     public static double TurnD = 0; // = 0                     (raise to reduce ocolation)
 
@@ -509,7 +509,10 @@ public class robotHardware extends LinearOpMode
         DrivePIDTotalError += time * DrivePIDError;
         DrivePIDTotalError = DrivePIDTotalError < DrivePIDMinIntegral ? DrivePIDMinIntegral: Math.min(DrivePIDMaxIntegral, DrivePIDTotalError);
 
-        DrivePIDMotorPower = (DriveP * DrivePIDError) + (DriveI * DrivePIDTotalError) + (DriveD * (DrivePIDError - DrivePIDPreviousError) / time) + DriveF;
+        DrivePIDMotorPower = (DriveP * DrivePIDError)
+                + (DriveI * DrivePIDTotalError)
+                + (DriveD * (DrivePIDError - DrivePIDPreviousError) / time)
+                + (DriveF * (DrivePIDError/Math.abs(DrivePIDError)));
         return DrivePIDMotorPower;
     }
 
@@ -522,7 +525,10 @@ public class robotHardware extends LinearOpMode
         TurningPIDTotalError += time * TurningPIDError;
         TurningPIDTotalError = TurningPIDTotalError < TurningPIDMinIntegral ? TurningPIDMinIntegral: Math.min(TurningPIDMaxIntegral, TurningPIDTotalError);
 
-        TurningPIDMotorPower = (TurnP * TurningPIDError) + (TurnI * TurningPIDTotalError) + (TurnD * (TurningPIDError - TurningPIDPreviousError) / time) + TurnF;
+        TurningPIDMotorPower = (TurnP * TurningPIDError)
+                + (TurnI * TurningPIDTotalError)
+                + (TurnD * (TurningPIDError - TurningPIDPreviousError) / time)
+                + (TurnF * (TurningPIDError/Math.abs(TurningPIDError)));
         return TurningPIDMotorPower;
     }
 
@@ -535,7 +541,10 @@ public class robotHardware extends LinearOpMode
         GeneralPIDTotalError += time * GeneralPIDError;
         GeneralPIDTotalError = GeneralPIDTotalError < GeneralPIDMinIntegral ? GeneralPIDMinIntegral: Math.min(GeneralPIDMaxIntegral, GeneralPIDTotalError);
 
-        GeneralPIDMotorPower = (GeneralP * GeneralPIDError) + (GeneralI * GeneralPIDTotalError) + (GeneralD * (GeneralPIDError - GeneralPIDPreviousError) / time) + GeneralF;
+        GeneralPIDMotorPower = (GeneralP * GeneralPIDError)
+                + (GeneralI * GeneralPIDTotalError)
+                + (GeneralD * (GeneralPIDError - GeneralPIDPreviousError) / time)
+                + (GeneralF * (GeneralPIDError/Math.abs(GeneralPIDError)));
         return GeneralPIDMotorPower;
     }
 

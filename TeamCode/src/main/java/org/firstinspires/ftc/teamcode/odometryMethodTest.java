@@ -34,8 +34,9 @@ public class odometryMethodTest extends LinearOpMode{
 
         telemetry.addData("x",robot.GlobalX);
         telemetry.addData("y",robot.GlobalY);
-        telemetry.addData("heading",robot.GlobalHeading);
+        telemetry.addData("heading",Math.toDegrees(robot.GlobalHeading));
         telemetry.addData("distance",distance);
+        telemetry.addData("90", 90);
         telemetry.update();
 
         waitForStart();
@@ -47,11 +48,12 @@ public class odometryMethodTest extends LinearOpMode{
             y = 0;
             distance = Math.hypot(x - robot.GlobalX, y - robot.GlobalY);
 
-            robot.goToPosSingle(x, y, Math.toRadians(0), Math.toRadians(0));
+            robot.goToPosSingle(x, y, Math.toRadians(90), Math.toRadians(0));
             telemetry.addData("x",robot.GlobalX);
             telemetry.addData("y",robot.GlobalY);
-            telemetry.addData("heading",robot.GlobalHeading);
+            telemetry.addData("heading",Math.toDegrees(robot.GlobalHeading));
             telemetry.addData("distance",distance);
+            telemetry.addData("90", 90);
             telemetry.update();
 
         }
