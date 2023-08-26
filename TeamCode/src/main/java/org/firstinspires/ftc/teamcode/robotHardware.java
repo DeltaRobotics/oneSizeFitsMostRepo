@@ -329,7 +329,7 @@ public class robotHardware extends LinearOpMode
         //double theta = (dtheta / 2.0);
         GlobalHeading += dtheta;
         // changing to += will reverse so the robot will think the other direction is forward
-        GlobalX = dx * Math.cos(GlobalHeading) - dy * Math.sin(GlobalHeading);
+        GlobalX -= dx * Math.cos(GlobalHeading) - dy * Math.sin(GlobalHeading);
         GlobalY -= dx * Math.sin(GlobalHeading) + dy * Math.cos(GlobalHeading);
 
 
